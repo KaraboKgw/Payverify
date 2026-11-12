@@ -1,0 +1,105 @@
+{
+  "_comment": "PayPal MCP server configuration for MCP clients (Claude Desktop, Bob, etc.).",
+  "_docs": "https://developer.paypal.com/tools/mcp-server/",
+
+  "mcpServers": {
+    "paypal-local": {
+      "_comment": "Local MCP server — requires Node.js v18+. Uses PAYPAL_ACCESS_TOKEN env var.",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@paypal/mcp",
+        "--tools=all"
+      ],
+      "env": {
+        "PAYPAL_ACCESS_TOKEN": "YOUR_SANDBOX_ACCESS_TOKEN",
+        "PAYPAL_ENVIRONMENT": "SANDBOX"
+      }
+    },
+
+    "paypal-remote-sse": {
+      "_comment": "Remote MCP server via SSE transport (sandbox). Replace <auth_header> with your access token.",
+      "_how_to_get_token": "Run: curl -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token -u 'CLIENT_ID:SECRET' -d 'grant_type=client_credentials'",
+      "_or_use_app_token_route": "GET http://localhost:3000/api/paypal/token",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.sandbox.paypal.com/sse",
+        "--header",
+        "Authorization: Bearer <auth_header>"
+      ]
+    },
+
+    "paypal-remote-http": {
+      "_comment": "Remote MCP server via Streamable HTTP transport (sandbox). Streams results as they arrive.",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.sandbox.paypal.com/http",
+        "--header",
+        "Authorization: Bearer <auth_header>"
+      ]
+    },
+
+    "paypal-remote-sse-production": {
+      "_comment": "Remote MCP server (production). Only use after thorough sandbox testing.",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.paypal.com/sse",
+        "--header",
+        "Authorization: Bearer <auth_header>"
+      ]
+    }
+  },
+
+  "_prompt_best_practices": {
+    "_source": "https://developer.paypal.com/tools/mcp-server/best-practices/",
+    "principles": {
+      "be_clear": "Put the action first ('Create an invoice...'), then supply parameter values in the order the tool expects.",
+      "be_specific": "Include every required field such as currency and invoice_id. Unclear input can cause failure.",
+      "separate_complex_tasks": "For a checkout sequence: 1) Create order 2) Pay order 3) Create shipment.",
+      "encourage_thinking": "Begin analytic requests with 'Think step-by-step before calling the tool...' to help avoid bad calls.",
+      "protect_pii": "Never embed card numbers, social security numbers, passwords, or secrets in prompts."
+    },
+    "example_multistep_prompts": {
+      "invoice_a_client": [
+        "create_invoice: Create an invoice for jane@example.com for 3 hours of CAD design at $100 per hour.",
+        "send_invoice: Send invoice {invoice_id} to the client.",
+        "send_invoice_reminder: Send a reminder for invoice {invoice_id}."
+      ],
+      "create_online_order": [
+        "create_order: Place an order for 2 'Custom Gold Ring' at $450 each (currency USD).",
+        "pay_order: Capture payment for order {order_id}.",
+        "create_shipment_tracking: Add tracking 1Z999AA10123456784 with carrier UPS to order {order_id}."
+      ],
+      "sell_a_subscription": [
+        "create_product: Create a new product named 'Coffee-Club Subscription' with the type of DIGITAL.",
+        "create_subscription_plan: Create a MONTH subscription plan for product {product_id} named 'Monthly Roast Plan' at the price of 20 USD per month.",
+        "create_subscription: Create a subscription to plan {plan_id} for subscriber Alice Brown whose email is alice@example.com."
+      ],
+      "evaluate_disputes": [
+        "list_disputes: List all OPEN disputes.",
+        "get_dispute: Get details for dispute {dispute_id}.",
+        "accept_dispute_claim: Accept the dispute with ID {dispute_id}."
+      ],
+      "invoice_with_qr_code": [
+        "create_invoice: Create an invoice for bob@example.com for one 'Pop-up Booth Entry Fee' at 20 USD.",
+        "send_invoice: Send invoice {invoice_id} to the client.",
+        "generate_invoice_qr_code: Generate a QR code for invoice {invoice_id}."
+      ],
+      "fix_invoice_error": [
+        "cancel_sent_invoice: Cancel the SENT invoice with ID {invoice_id}.",
+        "create_invoice: Create a corrected invoice for dana@example.com, 4h consulting at $90 USD/h.",
+        "send_invoice: Send invoice {new_invoice_id}."
+      ],
+      "cancel_subscription": [
+        "show_subscription_details: Show the details for subscription ID {subscription_id}.",
+        "cancel_subscription: Cancel the subscription ID {subscription_id}."
+      ]
+    }
+  }
+}
